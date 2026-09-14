@@ -33,7 +33,7 @@ var Token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJoYXNoIjoiNTk5NDQ3MWFiYjAxMT
 docker run -d \
   --name todo-container \
   -p 7540:7540 \
-  -e TODO_PASSWORD="123" \
+  -e TODO_PASSWORD="12345" \
   -e TODO_PORT="7540" \
   -e TODO_DBFILE="/app/db/scheduler.db" \
   -v "$(pwd)/db:/app/db" \
