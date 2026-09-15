@@ -4,6 +4,7 @@ import (
 	"TODO_List/pkg/db"
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -51,33 +52,33 @@ func taskPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
 	if err = json.Unmarshal(buf.Bytes(), &info); err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
 	if len(info.Title) == 0 {
-		writeJson(w, map[string]string{"error": "Title field is empty"})
+		writeJson(w, map[string]string{"error": "Title field is empty"}, http.StatusBadRequest)
 		return
 	}
 
 	err = checkDate(&info)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
 	id, err := db.AddTask(&info)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": "interanl error"}, http.StatusInternalServerError)
 		return
 	}
 
-	writeJson(w, map[string]any{"id": strconv.FormatInt(id, 10)})
+	writeJson(w, map[string]any{"id": strconv.FormatInt(id, 10)}, http.StatusOK)
 
 }
 
@@ -85,17 +86,17 @@ func taskGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := r.URL.Query().Get("id")
 	if len(id) == 0 {
-		writeJson(w, map[string]string{"error": "id is empty"})
+		writeJson(w, map[string]string{"error": "id is empty"}, http.StatusBadRequest)
 		return
 	}
 
 	res, err := db.GetTask(id)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": "task not found"}, http.StatusBadRequest)
 		return
 	}
 
-	writeJson(w, res)
+	writeJson(w, res, http.StatusOK)
 }
 
 func taskPutHandler(w http.ResponseWriter, r *http.Request) {
@@ -107,38 +108,38 @@ func taskPutHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
 	if err = json.Unmarshal(buf.Bytes(), &info); err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
 	if len(info.Title) == 0 {
-		writeJson(w, map[string]string{"error": "Title field is empty"})
+		writeJson(w, map[string]string{"error": "Title field is empty"}, http.StatusBadRequest)
 		return
 	}
 
 	if len(info.ID) == 0 {
-		writeJson(w, map[string]string{"error": "ID field is empty"})
+		writeJson(w, map[string]string{"error": "ID field is empty"}, http.StatusBadRequest)
 		return
 	}
 
 	err = checkDate(&info)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
 	err = db.UpdateTask(&info)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": "internal error"}, http.StatusBadRequest)
 		return
 	}
 
-	writeJson(w, struct{}{})
+	writeJson(w, struct{}{}, http.StatusOK)
 }
 
 func checkDate(task *db.Task) error {
@@ -170,14 +171,19 @@ func checkDate(task *db.Task) error {
 	return nil
 }
 
-func writeJson(w http.ResponseWriter, data any) {
+func writeJson(w http.ResponseWriter, data any, status int) {
 	resp, err := json.Marshal(data)
 	if err != nil {
+		log.Println("ERROR: failed to marshal json:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	if v, ok := data.(map[string]string); ok {
+		log.Println("ERROR:", v["error"])
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 	w.Write(resp)
 }

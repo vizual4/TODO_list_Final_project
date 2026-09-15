@@ -29,7 +29,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
@@ -38,7 +38,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(buf.Bytes(), &reqPassword)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
@@ -46,18 +46,17 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 	if len(pass) == 0 || reqPassword.Password != pass {
 		w.WriteHeader(http.StatusBadRequest)
-		writeJson(w, map[string]string{"error": "wrong password"})
+		writeJson(w, map[string]string{"error": "wrong password"}, http.StatusBadRequest)
 		return
 	}
 
 	token, err := generateToken(pass)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
 		return
 	}
 
-	writeJson(w, map[string]string{"token": token})
+	writeJson(w, map[string]string{"token": token}, http.StatusOK)
 }
 
 func auth(next http.HandlerFunc) http.HandlerFunc {

@@ -33,7 +33,7 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": "internal error"}, http.StatusInternalServerError)
 		return
 	}
 
@@ -41,7 +41,7 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 		tasks = []*db.Task{}
 	}
 
-	writeJson(w, TasksResp{Tasks: tasks})
+	writeJson(w, TasksResp{Tasks: tasks}, http.StatusOK)
 }
 
 func taskDoneHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,34 +50,34 @@ func taskDoneHandler(w http.ResponseWriter, r *http.Request) {
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": "internal error"}, http.StatusInternalServerError)
 		return
 	}
 
 	if len(task.Repeat) == 0 {
 		err := db.DeleteTask(id)
 		if err != nil {
-			writeJson(w, map[string]string{"error": err.Error()})
+			writeJson(w, map[string]string{"error": "internal error"}, http.StatusInternalServerError)
 			return
 		}
 
-		writeJson(w, struct{}{})
+		writeJson(w, struct{}{}, http.StatusOK)
 		return
 	}
 
 	nextD, err := NextDate(time.Now(), task.Date, task.Repeat)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
 	err = db.UpdateDate(nextD, task.ID)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": "internal error"}, http.StatusInternalServerError)
 		return
 	}
 
-	writeJson(w, struct{}{})
+	writeJson(w, struct{}{}, http.StatusOK)
 }
 
 func taskDeleteHandler(w http.ResponseWriter, r *http.Request) {
@@ -85,9 +85,9 @@ func taskDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := db.DeleteTask(id)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": "internal error"}, http.StatusInternalServerError)
 		return
 	}
 
-	writeJson(w, struct{}{})
+	writeJson(w, struct{}{}, http.StatusOK)
 }

@@ -47,7 +47,7 @@ func AddTask(task *Task) (int64, error) {
 func Tasks(limit int) ([]*Task, error) {
 	res := make([]*Task, 0, limit)
 
-	rows, err := DB.Query("SELECT * FROM scheduler ORDER BY date DESC LIMIT :limit", sql.Named("limit", limit))
+	rows, err := DB.Query("SELECT id, date, title, comment, repeat FROM scheduler ORDER BY date ASC LIMIT :limit", sql.Named("limit", limit))
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func UpdateDate(next, id string) error {
 
 func FindWithDate(date string, limit int) ([]*Task, error) {
 
-	query := "SELECT id, date, title, comment, repeat FROM scheduler WHERE date = :date ORDER BY date DESC LIMIT :limit"
+	query := "SELECT id, date, title, comment, repeat FROM scheduler WHERE date = :date ORDER BY date ASC LIMIT :limit"
 
 	rows, err := DB.Query(query, sql.Named("date", date), sql.Named("limit", limit))
 	if err != nil {
@@ -189,7 +189,7 @@ func FindWithDate(date string, limit int) ([]*Task, error) {
 func FindWord(word string, limit int) ([]*Task, error) {
 
 	query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE title 
-	LIKE :word OR comment LIKE :word ORDER BY date DESC LIMIT :limit`
+	LIKE :word OR comment LIKE :word ORDER BY date ASC LIMIT :limit`
 
 	rows, err := DB.Query(query, sql.Named("word", "%"+word+"%"), sql.Named("limit", limit))
 	if err != nil {
