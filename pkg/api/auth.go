@@ -28,7 +28,6 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	var buf bytes.Buffer
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
 		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
@@ -37,7 +36,6 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = json.Unmarshal(buf.Bytes(), &reqPassword)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
 		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
@@ -45,7 +43,6 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	pass := os.Getenv("TODO_PASSWORD")
 
 	if len(pass) == 0 || reqPassword.Password != pass {
-		w.WriteHeader(http.StatusBadRequest)
 		writeJson(w, map[string]string{"error": "wrong password"}, http.StatusBadRequest)
 		return
 	}

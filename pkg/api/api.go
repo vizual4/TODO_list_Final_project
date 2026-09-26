@@ -74,6 +74,7 @@ func taskPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	id, err := db.AddTask(&info)
 	if err != nil {
+		log.Println(err)
 		writeJson(w, map[string]string{"error": "interanl error"}, http.StatusInternalServerError)
 		return
 	}
@@ -135,6 +136,7 @@ func taskPutHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = db.UpdateTask(&info)
 	if err != nil {
+		log.Println(err)
 		writeJson(w, map[string]string{"error": "internal error"}, http.StatusBadRequest)
 		return
 	}
